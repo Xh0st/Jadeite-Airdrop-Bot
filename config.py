@@ -21,12 +21,16 @@ mysql_user = 'AirdropUser'
 mysql_pw = '<YOUR PASSWORD>'
 
 texts = {
-    'start_1': 'Hi {} and welcome to our Airdrop!\n\nGet started by clicking the button below.\n\n',
-    'start_2': 'Hi {},\n\nYour address has been added to the airdrop list!\n\n',
+    'start_1': 'Hi {} and welcome to our Airdrop!\n\nGet started by clicking the button below.\n\nTo apply for the airdrop you have to be in our [Telegram](https://t.me/Telegram) group, Folow us on [Twitter](https://twitter.com) and [Retweet](https://twitter.com) our pinned post.',
+    'start_2': 'Hi {},\n\nYour address has been added to the airdrop list!\n\nIf you have accidentally mistyped your wallet address or twitter username when registering. No worries!\nClick >💼 *View Wallet Address*< and update your address or twitter username.\n\n',
     'airdrop_start': 'The airdrop didn\'t start yet.',
     'airdrop_address': 'Type in your address:',
     'airdrop_max_cap': 'ℹ️ The airdrop reached its max cap.',
     'airdrop_walletused': '⚠️ That address has already been used. Use a different one.',
     'airdrop_confirmation': '✅ Your address has been added to airdrop list.',
     'airdrop_wallet_update': '✅ Your address has been updated.',
+    'twitter_address': '💬️ Type in your twitter username:',
+    'twitter_addressused': '⚠️ This twitter username has already been used.',
+    'twitter_update': '✅ Your twitter username has been changed.',    
+    'twitter_confirmation': '✅ Your twitter username has been added to airdrop list.\n\nYou have successfully applied for Airdrop Event\n\nIf you have accidentally mistyped your wallet address or twitter username when registering. No worries!\nClick >💼 *View Wallet Address*< and update your address or twitter username.',
 }
