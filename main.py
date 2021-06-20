@@ -33,7 +33,7 @@ def create_tables():
         table_name = "users"
         try:
             cursor.execute(
-                "	CREATE TABLE `" + table_name + "` ( `user_id` int(12) DEFAULT NULL,  `address` varchar(42) DEFAULT NULL,  `address_change_status` tinyint DEFAULT 0 )")
+                "	CREATE TABLE `" + table_name + "` ( `user_id` int(12) DEFAULT NULL, `twitter_id` text DEFAULT NULL, `address` varchar(42) DEFAULT NULL,  `address_change_status` tinyint DEFAULT 0 )")
             print('Database tables created.')
             return create_tables
         except:
@@ -60,7 +60,18 @@ def get_airdrop_users():
         for user in cursor.fetchall():
             tmp.append(user['user_id'])
         return tmp
-
+    
+    
+def get_twitter_users():
+    connection = get_connection()
+    with connection.cursor() as cursor:
+        sql = "SELECT twitter_id FROM users WHERE address IS NOT NULL"
+        cursor.execute(sql)
+        tmp = []
+        for user in cursor.fetchall():
+            tmp.append(user['twitter_id'])
+        return tmp
+    
 
 defaultkeyboard = types.ReplyKeyboardMarkup(resize_keyboard=True)
 defaultkeyboard.row(types.KeyboardButton('🚀 Join Airdrop'))
@@ -85,6 +96,17 @@ def update_wallet_address_button(message):
         markup.add(InlineKeyboardButton(f'Update Address ({address_changes}/{config.wallet_changes})',
                                         callback_data='edit_wallet_address'))
         return markup
+    
+def update_twitter_address_button(message):
+    connection = get_connection()
+    with connection.cursor() as cursor:
+        sql = "SELECT address_change_status FROM users WHERE user_id = %s"
+        cursor.execute(sql, message.chat.id)
+        address_changes = cursor.fetchone()['address_change_status']
+        markup = InlineKeyboardMarkup()
+        markup.add(InlineKeyboardButton(f'Change Twitter Username',
+                                        callback_data='edit_twitter_address'))
+        return markup    
 
 
 @bot.message_handler(func=lambda message: message.chat.type == 'private', commands=['start'])
@@ -145,6 +167,15 @@ def handle_text(message):
                          text='Your tokens will be sent to:\n\n[{0}](https://etherscan.io/address/{0})'.format(
                              data[0]['address']), parse_mode='Markdown', disable_web_page_preview=True,
                          reply_markup=update_wallet_address_button(message))
+    with connection.cursor() as cursor:
+        sql = "SELECT twitter_id FROM users WHERE user_id = %s"
+        cursor.execute(sql, message.chat.id)
+        data = cursor.fetchall()                         
+        bot.send_message(message.chat.id,
+        
+                         text='💬️ Your [Twitter](https://twitter.com/{0}) account registered for Airdrop: [{0}](https://twitter.com/{0})'.format(         
+                         data[0]['twitter_id'].strip("@")),  parse_mode='Markdown', disable_web_page_preview=True,            
+                         reply_markup=update_twitter_address_button(message))        
 
 
 def address_check(message):
@@ -179,6 +210,35 @@ def address_check(message):
             msg = bot.reply_to(message, '❌ Invalid $ETH address. Try again:', parse_mode='Markdown',
                                reply_markup=cancel_button())
             bot.register_next_step_handler(msg, address_check)
+            
+            
+def twitter_check(message):
+    bot.send_chat_action(message.chat.id, 'typing')
+    connection = get_connection()
+    with connection.cursor() as cursor:
+        if message.text in twitter_account:
+            msg = bot.reply_to(message, config.texts['twitter_addressused'], parse_mode='Markdown', 
+                               reply_markup=cancel_button())
+            bot.register_next_step_handler(msg, twitter_check)     
+        elif message.text not in twitter_account:
+            sql = "UPDATE users SET twitter_id = %s WHERE user_id = %s"
+            cursor.execute(sql, (message.text, message.chat.id))
+            bot.send_message(message.chat.id, config.texts['twitter_confirmation'], parse_mode='Markdown',
+                         reply_markup=airdropkeyboard)
+            
+            
+def twitter_check_update(message):
+    bot.send_chat_action(message.chat.id, 'typing')
+    connection = get_connection()
+    with connection.cursor() as cursor:
+        if message.text in twitter_account:
+            msg = bot.reply_to(message, config.texts['twitter_addressused'], parse_mode='Markdown')
+            bot.register_next_step_handler(msg, twitter_check_update)
+        elif message.text not in twitter_account:
+            sql = "UPDATE users SET twitter_id = %s WHERE user_id = %s"
+            cursor.execute(sql, (message.text, message.chat.id))  
+            bot.send_message(message.chat.id, config.texts['twitter_update'], parse_mode='Markdown',
+                         reply_markup=airdropkeyboard)            
 
 
 def address_check_update(message, old_address):
@@ -264,6 +324,7 @@ def callback_query(call):
 create_db_tables = create_tables()
 airdrop_users = get_airdrop_users()
 airdrop_wallets = get_airdrop_wallets()
+twitter_account = get_twitter_users()
 
 bot.enable_save_next_step_handlers(delay=2)
 bot.load_next_step_handlers()
